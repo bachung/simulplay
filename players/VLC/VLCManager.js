@@ -24,6 +24,12 @@ function Manager(path, args) {
   this.ignoreNextSeekEvent = false;
 };
 
+
+
+/**
+ * start - starts the process and adds the event handlers
+ * to the process
+ */
 Manager.prototype.start = function () {
   if (this.running) return;
   this.running = true;
@@ -74,4 +80,21 @@ Manager.prototype.onSeek = function (handler) {
 Manager.prototype.onFileLoad = function (handler) {
   this.fileLoadHandler = handler;
   return this;
+};
+
+Manager.prototype.pause = function () {
+  if (!this.paused) {
+    this.togglePause();
+  }
+};
+
+Manager.prototype.resume = function () {
+  if (this.paused) {
+    this.togglePause();
+  }
+};
+
+Manager.prototype.togglePause = function() {
+  this.paused = !this.paused;
+  this.process.stdin.write("pause\n");
 };
