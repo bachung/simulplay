@@ -126,4 +126,8 @@ Manager.prototype.seek = function (time) {
   this.process.stdin.write("seek " + time + "\n");
 };
 
+Manager.prototype.getTime = function () {
+  return this.currentTime;
+};
+
 exports.VLC = Manager;
