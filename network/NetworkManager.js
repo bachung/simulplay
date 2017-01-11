@@ -45,7 +45,7 @@ NetworkManager.prototype.sendTo = function (user, data) {
 
 NetworkManager.prototype.onData = function (handler) {
   this.socket.on('data', function (data) {
-    let message = JSON.parse(data);
+    let message = JSON.parse(data.toString());
     handler(message.sender, message.data);
   });
 };

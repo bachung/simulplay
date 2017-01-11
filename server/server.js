@@ -26,7 +26,7 @@ function socketOnData(data) {
     if (rooms[room] !== undefined && rooms[room][name] !== undefined) {
       for (let u in rooms[room]) {
         if (rooms[room][u].name != name) {
-          rooms[room][u].socket.write(data);
+          rooms[room][u].socket.write(data.data);
         }
       }
     }

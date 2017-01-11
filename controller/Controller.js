@@ -5,9 +5,9 @@ const playerType = "VLC";
 const path = "/Applications/VLC.app/Contents/MacOS/VLC";
 
 const host = "gablescode.net";
-const port = 1234;
+const port = 12345;
 
-const name = "bachung";
+const name = "bachung3";
 const room = "test";
 
 const playerFactory = require('../players/PlayerFactory');
@@ -31,8 +31,8 @@ function onSeekMessage(time) {
 
 netManager.connect(name, room).then(function () {
   netManager.onData(function (sender, data) {
-    let pauseRegex = /(pause) (\d+)/;
-    let seekRegex = /seek (\d+)/;
+    let pauseRegex = /^(pause) (\d+)/;
+    let seekRegex = /^seek (\d+)/;
     if (pauseRegex.test(data)) {
       let e = data.match(pauseRegex);
       onPauseMessage(e[1] == "paused", parseInt(e[2]));
