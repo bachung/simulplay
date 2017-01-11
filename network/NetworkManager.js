@@ -6,9 +6,15 @@ function NetworkManager(host, port) {
   this.socket = null;
 }
 
-NetworkManager.prototype.connect = function () {
+NetworkManager.prototype.connect = function (name, room) {
   return new Promise(function (resolve, reject) {
-    this.socket = net.connect(this.port, this.host, resolve);
+    this.socket = net.connect(this.port, this.host, function () {
+      this.socket.write(JSON.stringify{
+        name: name,
+        room: room
+      });
+      resolve();
+    });
     // When do I reject?
   });
 };
