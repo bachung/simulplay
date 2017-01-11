@@ -12,6 +12,7 @@ NetworkManager.prototype.connect = function (name, room) {
   return new Promise(function (resolve, reject) {
     this.socket = net.connect(this.port, this.host, function () {
       this.socket.write(JSON.stringify{
+        type: "register",
         name: name,
         room: room
       });
@@ -25,6 +26,7 @@ NetworkManager.prototype.broadcast = function (data) {
   this.socket.send(JSON.stringify({
     type: "broadcast",
     sender: this.name,
+    room: this.room,
     data: data
   }));
 };
@@ -33,6 +35,7 @@ NetworkManager.prototype.sendTo = function (user, data) {
   this.socket.send(JSON.stringify({
     type: "message",
     sender: this.name,
+    room: this.room,
     user: user,
     data: data
   }));
