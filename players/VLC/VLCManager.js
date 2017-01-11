@@ -2,8 +2,6 @@ const spawn = require("child_process").spawn;
 
 const DEFAULT_ARGS = ["--extraintf", "rc"];
 
-const exports = module.exports;
-
 /**
  * Creates an instance of a Manager to manage VLC
  *
@@ -51,7 +49,7 @@ Manager.prototype.start = function () {
       manager.process.stdin.write("status\n");
       manager.process.stdin.write("get_time\n")
     }
-  }, 100);
+  }, 16);
 };
 
 
