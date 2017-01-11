@@ -9,13 +9,15 @@ function NetworkManager(host, port) {
 NetworkManager.prototype.connect = function (name, room) {
   this.name = name;
   this.room = room;
+  let manager = this;
   return new Promise(function (resolve, reject) {
-    this.socket = net.connect(this.port, this.host, function () {
-      this.socket.write(JSON.stringify{
+    console.log("Connecting on " + manager.host + ":" + manager.port);
+    manager.socket = net.connect(manager.port, manager.host, function () {
+      manager.socket.write(JSON.stringify({
         type: "register",
         name: name,
         room: room
-      });
+      }));
       resolve();
     });
     // When do I reject?
