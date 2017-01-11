@@ -25,7 +25,7 @@ NetworkManager.prototype.connect = function (name, room) {
 };
 
 NetworkManager.prototype.broadcast = function (data) {
-  this.socket.send(JSON.stringify({
+  this.socket.write(JSON.stringify({
     type: "broadcast",
     sender: this.name,
     room: this.room,
@@ -34,7 +34,7 @@ NetworkManager.prototype.broadcast = function (data) {
 };
 
 NetworkManager.prototype.sendTo = function (user, data) {
-  this.socket.send(JSON.stringify({
+  this.socket.write(JSON.stringify({
     type: "message",
     sender: this.name,
     room: this.room,

@@ -4,8 +4,8 @@ const net = require('../network/NetworkManager');
 const playerType = "VLC";
 const path = "/Applications/VLC.app/Contents/MacOS/VLC";
 
-const host = "127.0.0.1";
-const port = 12345;
+const host = "gablescode.net";
+const port = 1234;
 
 const name = "bachung";
 const room = "test";
