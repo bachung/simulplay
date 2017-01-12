@@ -30,6 +30,10 @@ function socketOnData(data) {
         }
       }
     }
+  } else if (data.type = "message") {
+    if (rooms[room] !== undefined && rooms[room][name] !== undefined) {
+      rooms[room][data.user].socket.write(JSON.stringify(data));
+    }
   }
 }
 

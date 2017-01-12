@@ -7,7 +7,7 @@ const path = "/Applications/VLC.app/Contents/MacOS/VLC";
 const host = "gablescode.net";
 const port = 12345;
 
-const name = "bachung6";
+const name = "bachung5";
 const room = "test";
 
 const playerFactory = require('../players/PlayerFactory');
@@ -42,11 +42,15 @@ netManager.connect(name, room).then(function () {
     let infoRegex = /^info/;
     let infoResponseRegex = /^info (paused|playing) (\d+)/;
     if (pauseRegex.test(data)) {
-      let e = data.match(pauseRegex);
-      onPauseMessage(e[1] == "paused", parseInt(e[2]));
+      if (receivedInfo) {
+        let e = data.match(pauseRegex);
+        onPauseMessage(e[1] == "paused", parseInt(e[2]));
+      }
     } else if (seekRegex.test(data)) {
-      let e = data.match(seekRegex);
-      onSeekMessage(parseInt(e[1]));
+      if (receivedInfo) {
+        let e = data.match(seekRegex);
+        onSeekMessage(parseInt(e[1]));
+      }
     } else if (infoRegex.test(data)) {
       onInfoMessage(sender);
     } else if (infoResponseRegex.test(sender)) {
