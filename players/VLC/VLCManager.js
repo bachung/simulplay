@@ -65,7 +65,7 @@ Manager.prototype.processCommand = function (command) {
   if (time.test(command)) {
     let t = parseInt(command);
     if (Math.abs(t - this.currentTime) > 1) {
-      this.onSeek(t);
+      this.seekHandler(t);
     }
     this.currentTime = t;
     if (t != this.currentTime) {
@@ -119,6 +119,7 @@ Manager.prototype.resume = function () {
 Manager.prototype.togglePause = function () {
   this.paused = !this.paused;
   this.process.stdin.write("pause\n");
+  this.seek(this.currentTime);
 };
 
 Manager.prototype.seek = function (time) {

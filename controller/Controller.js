@@ -25,13 +25,13 @@ function onPauseMessage(paused, time) {
 }
 
 function onSeekMessage(time) {
-  player.seek(time);s
+  player.seek(time);
 }
 
 
 netManager.connect(name, room).then(function () {
   netManager.onData(function (sender, data) {
-    let pauseRegex = /^(pause) (\d+)/;
+    let pauseRegex = /^(paused|playing) (\d+)/;
     let seekRegex = /^seek (\d+)/;
     if (pauseRegex.test(data)) {
       let e = data.match(pauseRegex);
