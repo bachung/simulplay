@@ -7,7 +7,7 @@ const path = "/Applications/VLC.app/Contents/MacOS/VLC";
 const host = "gablescode.net";
 const port = 12345;
 
-const name = "bachung3";
+const name = "bachung4";
 const room = "test";
 
 const playerFactory = require('../players/PlayerFactory');
