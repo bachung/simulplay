@@ -1,5 +1,8 @@
 # simulplay
 
+This project barely works so far, I have to clean it up so it's actually usable.
+
+--
 Syncs playback between video players on separate devices.
 
 Right now, it only supports VLC.
