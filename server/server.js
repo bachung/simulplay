@@ -9,6 +9,12 @@ function socketOnRegister(data, socket) {
   let room = data.room;
   if (rooms[room] === undefined) {
     rooms[room] = {};
+    socket.write(JSON.stringify({
+      type: "message",
+      sender: "server",
+      room: room,
+      data: "info paused 0",
+    }));
   }
   rooms[room][name] = {
     socket: socket,

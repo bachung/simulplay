@@ -119,9 +119,7 @@ Manager.prototype.resume = function () {
 Manager.prototype.togglePause = function () {
   this.paused = !this.paused;
   this.process.stdin.write("pause\n");
-  this.currentTime++;
-  this.seek(this.currentTime);
-  this.currentTie--;
+  this.seek(this.currentTime - 1);
   this.seek(this.currentTime);
 };
 
