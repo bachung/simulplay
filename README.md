@@ -7,6 +7,8 @@ Syncs playback between video players on separate devices.
 
 Right now, it only supports VLC.
 
+Only tested on OS X (almost definitely does not work on Windows)
+
 To run the server:
 node server/server
 
