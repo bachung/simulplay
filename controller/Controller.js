@@ -40,16 +40,13 @@ netManager.connect(name, room).then(function () {
     let pauseRegex = /^(paused|playing) (\d+)/;
     let seekRegex = /^seek (\d+)/;
     let infoResponseRegex = /^info (paused|playing) (\d+)/;
+    console.log(receivedInfo);
     if (pauseRegex.test(data)) {
-      if (receivedInfo) {
-        let e = data.match(pauseRegex);
-        onPauseMessage(e[1] == "paused", parseInt(e[2]));
-      }
+      let e = data.match(pauseRegex);
+      onPauseMessage(e[1] == "paused", parseInt(e[2]));
     } else if (seekRegex.test(data)) {
-      if (receivedInfo) {
-        let e = data.match(seekRegex);
-        onSeekMessage(parseInt(e[1]));
-      }
+      let e = data.match(seekRegex);
+      onSeekMessage(parseInt(e[1]));
     } else if ("info" == data) {
       onInfoMessage(sender);
     } else if (infoResponseRegex.test(sender)) {
