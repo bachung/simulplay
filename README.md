@@ -9,10 +9,12 @@ Right now, it only supports VLC.
 
 Only tested on OS X (almost definitely does not work on Windows)
 
-To run the server:
-node server/server
+Configure username/room to join in config.json
 
-To run the client:
-Change the constants at the top of controller/controller.js so they are configured correctly.
+Configure hostname/port in config.json
 
-node controller/Controller
+To run client:
+npm start
+
+To run server:
+npm run server
