@@ -1,0 +1,21 @@
+{
+  "name": "simulplay",
+  "version": "1.0.0",
+  "description": "This project barely works so far, I have to clean it up so it's actually usable.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "server": "node server/server",
+    "start": "node controller/controller"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bachung/simulplay.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/bachung/simulplay/issues"
+  },
+  "homepage": "https://github.com/bachung/simulplay#readme"
+}

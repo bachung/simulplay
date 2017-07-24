@@ -1,5 +1,5 @@
 const net = require('net');
-const port = 12345;
+const port = require('../config').port;
 
 let rooms = {};
 

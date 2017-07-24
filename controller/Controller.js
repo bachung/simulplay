@@ -1,18 +1,22 @@
 const net = require('../network/NetworkManager');
+const config = require('../config');
 
 // Change this later if supporting more than VLC
 const playerType = "VLC";
 const path = "/Applications/VLC.app/Contents/MacOS/VLC";
 
-const host = "gablescode.net";
-const port = 12345;
+const host = config.host;
+const port = config.port;
 
-const name = "bachung6";
-const room = "test";
+const name = config.name;
+const room = config.room;
 
 const playerFactory = require('../players/PlayerFactory');
 
 let player = playerFactory.build(playerType, path, []);
+
+console.log("Using name", name, "and room", room);
+
 let netManager = new net.NetworkManager(host, port);
 
 function onPauseMessage(paused, time) {
