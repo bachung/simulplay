@@ -21,7 +21,6 @@ function socketOnRegister(data, socket) {
 function socketOnData(message) {
   const {sender, room} = message;
   console.log("Received data:\n" + JSON.stringify(message));
-
   if (message instanceof messages.BroadcastMessage) {
     if (rooms[room] !== undefined && rooms[room][sender] !== undefined) {
       for (let user in rooms[room]) {
@@ -40,7 +39,7 @@ function socketOnData(message) {
 const server = net.createServer(function (socket) {
   socket.on('data', function (data) {
     const message = messages.Message.parse(JSON.parse(data));
-    if (data instanceof messages.RegistrationMessage) {
+    if (message instanceof messages.RegistrationMessage) {
       socketOnRegister(message, socket);
     } else {
       socketOnData(message);

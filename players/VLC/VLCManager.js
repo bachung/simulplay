@@ -1,6 +1,8 @@
 const spawn = require("child_process").spawn;
 
-const DEFAULT_ARGS = ["--extraintf", "rc"];
+const DEFAULT_ARGS = ["--extraintf", "luaintf{intf=simulplay}"];
+
+console.log(DEFAULT_ARGS);
 
 class VLCManager {
   constructor(path, args) {
@@ -25,11 +27,6 @@ class VLCManager {
 
     this.commandHandlers = new Map();
     this.initCommandHandlers_();
-
-    this.poller = setInterval(() => {
-      this.process.stdin.write("status\n");
-      this.process.stdin.write("get_time\n");
-    }, 16);
   }
 
   on(event, handler) {
@@ -45,19 +42,18 @@ class VLCManager {
   }
 
   initCommandHandlers_() {
-    this.commandHandlers.set(/^(\d+)/, this.handleTimeChange_.bind(this));
-    this.commandHandlers.set(/^\( state (.+) \)/, this.handlePauseToggle_.bind(this));
-    this.commandHandlers.set(/^\( new input (.+) \)/, this.handleFile_.bind(this));
+    this.commandHandlers.set(/^time ([\d.]+)/, this.handleTimeChange_.bind(this));
+    this.commandHandlers.set(/^status (.+)/, this.handlePauseToggle_.bind(this));
+    this.commandHandlers.set(/^new input (.+)/, this.handleFile_.bind(this));
   }
 
   handleTimeChange_(command, time) {
-    time = parseInt(time);
-    if (Math.abs(time - this.currentTime) > 1) {
+    time = parseFloat(time);
+    if (Math.abs(time - this.currentTime) > 1.0) {
       this.currentTime = time;
       this.handlers.seek.forEach(fn => fn(time));
-    } else if (Math.abs(time - this.currentTime) === 1) {
+    } else {
       this.currentTime = time;
-      this.handlers.tick.forEach(fn => fn(time));
     }
   }
 
@@ -98,7 +94,12 @@ class VLCManager {
       for (let command of commands) {
         this.processCommand_(command);
       }
-    })
+    });
+
+    this.poller = setInterval(() => {
+      this.process.stdin.write("status\n");
+      this.process.stdin.write("time\n");
+    }, 100);
   }
 
   pause() {
@@ -115,8 +116,9 @@ class VLCManager {
   }
 
   seek(time) {
+    console.log("Seeking to", time);
     this.currentTime = time;
-    this.process.stdin.write("seek " + parseInt(time) + "\n");
+    this.process.stdin.write("time " + parseFloat(time) + "\n");
   }
 
   getTime() {

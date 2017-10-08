@@ -30,7 +30,7 @@ class Controller {
 
       this.networkManager.on('data', (sender, data) => {
         data = clientMessages.ClientMessage.parse(data);
-
+        const player = this.player;
         if (data instanceof clientMessages.InfoRequest) {
           this.networkManager.sendTo(sender, new clientMessages.InfoResponse({
             paused: player.getPauseState(),
