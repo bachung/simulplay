@@ -1,5 +1,7 @@
 const messages = require('./constants').messages;
 
+let MessageTypes;
+
 class Message {
     asJSON() {
         return JSON.stringify(this);
@@ -61,7 +63,7 @@ module.exports.BroadcastMessage = BroadcastMessage;
 module.exports.SendToMessage = SendToMessage;
 module.exports.Message = Message;
 
-const MessageTypes = {
+MessageTypes = {
     [messages.register]: RegistrationMessage,
     [messages.broadcast]: BroadcastMessage,
     [messages.send]: SendToMessage,

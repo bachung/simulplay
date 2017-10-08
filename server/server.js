@@ -1,12 +1,11 @@
 const net = require('net');
 const port = require('../config').port;
+const messages = require('../shared/messages');
 
-let rooms = {};
-
+const rooms = {};
 
 function socketOnRegister(data, socket) {
-  let name = data.name;
-  let room = data.room;
+  const {name, room} = data;
   if (rooms[room] === undefined) {
     rooms[room] = {};
 
@@ -19,32 +18,32 @@ function socketOnRegister(data, socket) {
   console.log(name + " registered to room " + room);
 }
 
-function socketOnData(data) {
-  let name = data.sender;
-  let room = data.room;
-  console.log("Received data:\n" + JSON.stringify(data));
-  if (data.type == "broadcast") {
-    if (rooms[room] !== undefined && rooms[room][name] !== undefined) {
-      for (let u in rooms[room]) {
-        if (rooms[room][u].name != name) {
-          rooms[room][u].socket.write(JSON.stringify(data));
+function socketOnData(message) {
+  const {sender, room} = message;
+  console.log("Received data:\n" + JSON.stringify(message));
+
+  if (message instanceof messages.BroadcastMessage) {
+    if (rooms[room] !== undefined && rooms[room][sender] !== undefined) {
+      for (let user in rooms[room]) {
+        if (rooms[room][user].name !== sender) {
+          rooms[room][user].socket.write(JSON.stringify(message));
         }
       }
     }
-  } else if (data.type = "message") {
-    if (rooms[room] !== undefined && rooms[room][name] !== undefined) {
-      rooms[room][data.user].socket.write(JSON.stringify(data));
+  } else if (message instanceof messages.SendToMessage) {
+    if (rooms[room] !== undefined && rooms[room][sender] !== undefined) {
+      rooms[room][message.user].socket.write(JSON.stringify(message));
     }
   }
 }
 
-let server = net.createServer(function (socket) {
+const server = net.createServer(function (socket) {
   socket.on('data', function (data) {
-    let json = JSON.parse(data);
-    if (json.type == "register") {
-      socketOnRegister(json, socket);
+    const message = messages.Message.parse(JSON.parse(data));
+    if (data instanceof messages.RegistrationMessage) {
+      socketOnRegister(message, socket);
     } else {
-      socketOnData(json);
+      socketOnData(message);
     }
   });
 });
