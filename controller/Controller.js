@@ -17,7 +17,7 @@ let player = playerFactory.build(playerType, path, []);
 
 console.log("Using name", name, "and room", room);
 
-let netManager = new net.NetworkManager(host, port);
+const netManager = new net.NetworkManager(host, port);
 
 function onPauseMessage(paused, time) {
   player.seek(time);
@@ -40,7 +40,7 @@ function onInfoMessage(sender) {
 
 netManager.connect(name, room).then(function () {
   let receivedInfo = false;
-  netManager.onData(function (sender, data) {
+  netManager.on('data', function (sender, data) {
     let pauseRegex = /^(paused|playing) (\d+)/;
     let seekRegex = /^seek (\d+)/;
     let infoResponseRegex = /^info (paused|playing) (\d+)/;
@@ -61,16 +61,16 @@ netManager.connect(name, room).then(function () {
       }
     }
   });
-  netManager.onDisconnect(function () {
+  netManager.on('disconnect', function () {
 
   });
   netManager.broadcast("info");
-});
+}).catch(console.log);
 
-player.onPauseToggle(function (paused) {
+player.on('pause', function (paused) {
   let message = paused ? "paused" : "playing";
   netManager.broadcast(message + " " + player.getTime());
-}).onSeek(function (time) {
+}).on('seek', function (time) {
   netManager.broadcast("seek " + time);
 });
 

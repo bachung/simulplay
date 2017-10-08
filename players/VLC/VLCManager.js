@@ -2,132 +2,122 @@ const spawn = require("child_process").spawn;
 
 const DEFAULT_ARGS = ["--extraintf", "rc"];
 
-/**
- * Creates an instance of a Manager to manage VLC
- *
- * @constructor
- * @this {Manager}
- * @param  {string} path path to VLC executable
- * @param  {Array.string} args additional command line arguments
- */
-function Manager(path, args) {
-  this.path = path;
-  this.args = args;
+class VLCManager {
+  constructor(path, args) {
+    this.path = path;
+    this.args = args;
 
-  this.paused = true;
-  this.currentTime = 0;
-  this.running = false;
+    this.paused = true;
+    this.currentTime = 0;
 
-  this.ignoreNextPauseEvent = false;
-  this.ignoreNextSeekEvent = false;
-};
+    this.ignoreNextPauseEvent = false;
+    this.ignoreNextSeekEvent = false;
 
+    this.handlers = {
+      pause: [],
+      seek: [],
+      file: [],
+      tick: [],
+      pause: [],
+      resume: []
+    };
 
+    this.commandHandlers = new Map();
+    this.initCommandHandlers_();
 
-/**
- * start - starts the process and adds the event handlers
- * to the process
- */
-Manager.prototype.start = function () {
-  if (this.running) return;
-  this.running = true;
-  this.process = spawn(this.path, DEFAULT_ARGS.concat(this.args));
+    this.poller = setInterval(() => {
+      this.process.stdin.write("status\n");
+      this.process.stdin.write("get_time\n");
+    }, 16);
+  }
 
-  let manager = this;
-  this.process.stdout.on('data', function (data) {
-    let commands = data.toString().split("\n");
-    for (let i = 0; i < commands.length; i++) {
-      manager.processCommand(commands[i]);
+  on(event, handler) {
+    if (!(event in this.handlers)) throw new Error("Invalid event handler");
+    this.handlers[event].push(handler);
+    return this;
+  }
+
+  off(event, handler) {
+    if (!(event in this.handlers)) throw new Error("Invalid event handler");
+    this.handlers[event] = this.handlers[event].filter(handler => handler !== handler);
+    return this;
+  }
+
+  initCommandHandlers_() {
+    this.commandHandlers.set(/^(\d+)/, this.handleTimeChange_.bind(this));
+    this.commandHandlers.set(/^\( state (.+) \)/, this.handlePauseToggle_.bind(this));
+    this.commandHandlers.set(/^\( new input (.+) \)/, this.handleFile_.bind(this));
+  }
+
+  handleTimeChange_(command, time) {
+    time = parseInt(time);
+    if (Math.abs(time - this.currentTime) > 1) {
+      this.currentTime = time;
+      this.handlers.seek.forEach(fn => fn(time));
+    } else if (Math.abs(time - this.currentTime) === 1) {
+      this.currentTime = time;
+      this.handlers.tick.forEach(fn => fn(time));
     }
+  }
 
-  });
-
-
-
-  this.listener = setInterval(function() {
-    if (manager.process != undefined) {
-      manager.process.stdin.write("status\n");
-      manager.process.stdin.write("get_time\n")
-    }
-  }, 16);
-};
-
-
-/**
- * anonymous function - description
- *
- * @param  {type} command description
- * @return {type}         description
- */
-Manager.prototype.processCommand = function (command) {
-  let time = /^\d+/;
-  let state = /^\( state (.+) \)/;
-  if (time.test(command)) {
-    let t = parseInt(command);
-    if (Math.abs(t - this.currentTime) > 1) {
-      this.seekHandler(t);
-    }
-    this.currentTime = t;
-    if (t != this.currentTime) {
-      if (this.tickHandler !== undefined) {
-        this.tickHandler(t);
-      }
-    }
-  } else if (state.test(command)) {
-    let paused = command.match(state)[1] != "playing";
-    if (paused != this.paused) {
+  handlePauseToggle_(command, state) {
+    const paused = state !== 'playing';
+    if (paused !== this.paused) {
       this.paused = paused;
-      if (this.onPauseToggle !== undefined) {
-        this.pauseHandler(paused);
+      this.handlers.pause.forEach(fn => fn(paused));
+    }
+  }
+
+  handleFile_(command) {
+    this.handlers.file.forEach(fn => fn());
+  }
+
+  processCommand_(command) {
+    for (let entry of this.commandHandlers) {
+      const [regex, fn] = entry;
+      if (regex.test(command)) {
+        fn.apply(this, command.match(regex));
+        break;
       }
     }
   }
-};
 
-Manager.prototype.onPauseToggle = function (handler) {
-  this.pauseHandler = handler;
-  return this;
-};
+  start() {
+    if (this.running) {
+      throw new Error("VLC already running");
+    }
+    this.running = true;
+    this.process = spawn(this.path, DEFAULT_ARGS.concat(this.args));
 
-Manager.prototype.onSeek = function (handler) {
-  this.seekHandler = handler;
-  return this;
-};
+    this.process.stdout.on('data', data => {
+      const commands = data.toString().split("\n");
+      for (let command of commands) {
+        this.processCommand_(command);
+      }
+    })
+  }
 
-Manager.prototype.onFileLoad = function (handler) {
-  this.fileLoadHandler = handler;
-  return this;
-};
+  pause() {
+    if (!this.paused) this.togglePause();
+  }
 
-Manager.prototype.onTick = function (handler) {
-  this.tickHandler = handler;
-  return this;
+  resume() {
+    if (this.paused) this.togglePause();
+  }
+
+  togglePause() {
+    this.paused = !this.paused;
+    this.process.stdin.write("pause\n");
+  }
+
+  seek(time) {
+    this.currentTime = time;
+    this.process.stdin.write("seek " + parseInt(time) + "\n");
+  }
+
+  getTime() {
+    return this.currentTime;
+  }
 }
 
-Manager.prototype.pause = function () {
-  if (!this.paused) {
-    this.togglePause();
-  }
-};
-
-Manager.prototype.resume = function () {
-  if (this.paused) {
-    this.togglePause();
-  }
-};
-
-Manager.prototype.togglePause = function () {
-  this.paused = !this.paused;
-  this.process.stdin.write("pause\n");
-};
-
-Manager.prototype.seek = function (time) {
-  this.currentTime = time;
-  this.process.stdin.write("seek " + time + "\n");
-};
-
-Manager.prototype.getTime = function () {
-  return this.currentTime;
-};
-
-exports.VLC = Manager;
+exports.VLC = VLCManager;
