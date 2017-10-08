@@ -12,7 +12,7 @@ Configure username/room to join in config.json
 Configure hostname/port in config.json
 
 To run client:
-npm start
+```npm start```
 
 To run server:
-npm run server
+```npm run server```
