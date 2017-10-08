@@ -16,3 +16,5 @@ To run client:
 
 To run server:
 ```npm run server```
+
+Move simulplay.lua into the intf folder in your VLC installation.
