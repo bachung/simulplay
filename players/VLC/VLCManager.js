@@ -9,6 +9,7 @@ class VLCManager {
 
     this.paused = true;
     this.currentTime = 0;
+    this.file = "";
 
     this.ignoreNextPauseEvent = false;
     this.ignoreNextSeekEvent = false;
@@ -68,8 +69,11 @@ class VLCManager {
     }
   }
 
-  handleFile_(command) {
-    this.handlers.file.forEach(fn => fn());
+  handleFile_(command, file) {
+    if (this.file !== file) {
+      this.file = file;
+      this.handlers.file.forEach(fn => fn(file));
+    }
   }
 
   processCommand_(command) {
@@ -117,6 +121,10 @@ class VLCManager {
 
   getTime() {
     return this.currentTime;
+  }
+
+  getPauseState() {
+    return this.paused;
   }
 }
 

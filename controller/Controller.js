@@ -1,8 +1,10 @@
 const net = require('../network/NetworkManager');
 const config = require('../config');
+const clientMessages = require('./clientMessages');
+
 
 // Change this later if supporting more than VLC
-const playerType = "VLC";
+const player = "VLC";
 const path = "/Applications/VLC.app/Contents/MacOS/VLC";
 
 const host = config.host;
@@ -13,65 +15,67 @@ const room = config.room;
 
 const playerFactory = require('../players/PlayerFactory');
 
-let player = playerFactory.build(playerType, path, []);
 
-console.log("Using name", name, "and room", room);
+class Controller {
+  constructor({player, path}) {
+    this.networkManager = null;
+    this.player = playerFactory.build(player, path, []);
+    this.receiveInfo = false;
+  }
 
-const netManager = new net.NetworkManager(host, port);
+  async connect({host = config.host, port = config.port, name = config.name, room = config.room}) {
+    try {
+      this.networkManager = new net.NetworkManager(host, port);
+      await this.networkManager.connect(name, room);
 
-function onPauseMessage(paused, time) {
-  player.seek(time);
-  if (paused) {
-    player.pause();
-  } else {
-    player.resume();
+      this.networkManager.on('data', (sender, data) => {
+        data = clientMessages.ClientMessage.parse(data);
+
+        if (data instanceof clientMessages.InfoRequest) {
+          this.networkManager.sendTo(sender, new clientMessages.InfoResponse({
+            paused: player.getPauseState(),
+            time: player.getTime()
+          }));
+        } else if (data instanceof clientMessages.InfoResponse) {
+          if (this.receiveInfo) {
+            this.receiveInfo = false;
+            this.player.seek(data.time);
+            if (data.paused) {
+              player.pause();
+            } else {
+              player.resume();
+            }
+          }
+        } else if (data instanceof clientMessages.PauseCommand) {
+          if (data.paused) {
+            player.pause();
+          } else {
+            player.resume();
+          }
+          player.seek(data.time);
+        } else if (data instanceof clientMessages.SeekCommand) {
+          player.seek(data.time);
+        }
+      });
+
+      this.networkManager.on('diconnect', console.log);
+
+      this.player.on('pause', paused => {
+        this.networkManager.broadcast(new clientMessages.PauseCommand({paused, time: this.player.getTime()}));
+      }).on('seek', time => {
+        this.networkManager.broadcast(new clientMessages.SeekCommand({time}));
+      }).on('file', () => {
+        this.receiveInfo = true;
+        this.networkManager.broadcast(new clientMessages.InfoRequest());
+        setTimeout(() => this.receiveInfo = false, 2000);
+      });
+
+      this.player.start();
+    } catch (e) {
+      console.error(e);
+    }
   }
 }
 
-function onSeekMessage(time) {
-  player.seek(time);
-}
-
-function onInfoMessage(sender) {
-  netManager.sendTo(sender, "info " + (player.paused ? "paused" : "playing")
-    + " " + player.getTime());
-}
-
-
-netManager.connect(name, room).then(function () {
-  let receivedInfo = false;
-  netManager.on('data', function (sender, data) {
-    let pauseRegex = /^(paused|playing) (\d+)/;
-    let seekRegex = /^seek (\d+)/;
-    let infoResponseRegex = /^info (paused|playing) (\d+)/;
-    console.log(receivedInfo);
-    if (pauseRegex.test(data)) {
-      let e = data.match(pauseRegex);
-      onPauseMessage(e[1] == "paused", parseInt(e[2]));
-    } else if (seekRegex.test(data)) {
-      let e = data.match(seekRegex);
-      onSeekMessage(parseInt(e[1]));
-    } else if ("info" == data) {
-      onInfoMessage(sender);
-    } else if (infoResponseRegex.test(sender)) {
-      if (!receivedInfo) {
-        let e = data.match(infoResponseRegex);
-        onPauseMessage(e[1] == "paused", parseInt(e[2]));
-        receivedInfo = true;
-      }
-    }
-  });
-  netManager.on('disconnect', function () {
-
-  });
-  netManager.broadcast("info");
-}).catch(console.log);
-
-player.on('pause', function (paused) {
-  let message = paused ? "paused" : "playing";
-  netManager.broadcast(message + " " + player.getTime());
-}).on('seek', function (time) {
-  netManager.broadcast("seek " + time);
-});
-
-player.start();
+const controller = new Controller({player, path});
+controller.connect({}).catch(console.error);
